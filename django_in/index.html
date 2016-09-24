@@ -1,0 +1,38 @@
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="bootstrap.min.css"/>
+<script type="text/javascript" src="angular.min.js"></script>
+<script type="text/javascript" src="app.js"></script>
+<script type="text/javascript" src="jquery.min.js"></script>
+<script type="text/javascript" src="bootstrap.min.js"></script>
+
+</head>
+
+<body class="container" ng-app='workorders' ng-controller='workorderCtrl'>
+<button class="btn btn-success">This is a sign of little effort</button>
+<h1> Work Orders </h1>
+<div class="container-fluid">
+#{workorders}#
+  <ul class="list-group">
+    <li class="list-group-item" ng-repeat="order in workorders">
+      <a href="#" class="btn btn-success">#{order.fields.order}#</a> <span class="list-group-text panel">#{order.fields.order_text}#</span>
+    </li>
+  </ul>
+</div>
+
+<script>
+  angular.module('workorders',[]).controller('workorderCtrl', function workorderCtrl($scope,$http){
+    //$scope.workorders = [{order:1, order_text:'Test order'}];
+    
+    $http.get('http://localhost:8000/').then(function(response){
+      $scope.workorders = response.data;
+    });
+  });
+  angular.module('workorders').config(function($interpolateProvider){
+    $interpolateProvider.startSymbol('#{');
+    $interpolateProvider.endSymbol('}#');
+  });
+</script>
+</body>
+</html>

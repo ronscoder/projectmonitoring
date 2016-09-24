@@ -1,54 +1,98 @@
 from django.db import models
 
+from datetime import date
+from datetime import timedelta
+
 # Create your models here.
 from django.db import models
 
-class Project(models.model):
+STATUS = (
+  ('OPEN','Open'),
+  ('ONHOLD','On Hold'),
+  ('CANCELED', 'canceled'),
+  ('CLOSED','Closed'),
+  ('NOT_STARTED', 'Not started')
+  )
+
+COMPLETION =  (
+  ('IN_PROGRESS','In progress'),
+  ('COMPLETED','Completed'),
+  ('NOT_STARTED', 'Not started')
+  )
+class Project(models.Model):
   title = models.CharField('Project Title', max_length=50)
-  short_text = models.CharField('Project Description', max_length=200)
-  start_date = models.DateTimeField('Tentative start date')
-  end_date = models.DateTimeField('Tentative end date')
-  actual_start_date = models.DateTimeField('Actual start date')
-  actual_end_date = models.DateTimeField('Actual end date')
-  project_status = models.CharField('Completion status', max_length=50)
+  short_text = models.CharField('Project Description', max_length=200, null=True, blank=True)
+  start_date = models.DateField('Tentative start date', null=True, blank=True)
+  end_date = models.DateField('Tentative end date', null=True, blank=True)
+  actual_start_date = models.DateField('Actual start date', null=True, blank=True)
+  actual_end_date = models.DateField('Actual end date', null=True, blank=True)
+  project_status = models.CharField('Completion status', max_length=50, choices=STATUS)
+  def __str__(self):
+    return self.title 
 
-class WorkOrder(models.model):
+class WorkOrder(models.Model):
   order = models.CharField('Order Number', max_length=50)
-  order_date = models.DateTimeField('Date of order')
-  file = models.FileField(upload_to='files/work_orders/%Y/%m/%d/')
-  order_status = models.CharField('Completion status', max_length=50)
-  ref_order = models.ForeignKey('self', on_delete=models.CASCADE)
-  order_text = models.TextField('Order Summary')
+  order_text = models.TextField('Order Summary',null=True, blank=True)
+  order_date = models.DateField('Date of order')
+  file = models.FileField(upload_to='work_orders/%Y/%m/%d/')
+  order_status = models.CharField('Completion status', max_length=50, choices=STATUS)
+  ref_order = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True)
+  def __str__(self):
+    return self.order # + ': ' + self.order_text
 
-class Division(models.model):
+class Division(models.Model):
   short_name = models.CharField('Division Name', max_length=20)
+  def __str__(self):
+    return self.short_name
 
-class SubDivision(models.model):
+class SubDivision(models.Model):
   short_name = models.CharField('Division Name', max_length=20)
   ref_division = models.ForeignKey('Division', on_delete=models.CASCADE)
+  def __str__(self):
+    return self.short_name
 
-class Package(models.model):
+class Package(models.Model):
   short_name = models.CharField('Package Name', max_length=20)
   ref_sub_division = models.ForeignKey('SubDivision', on_delete=models.CASCADE)
+  def __str__(self):
+    return self.short_name
 
-class Firm(models.model):
-  short_name = models.CharField('Firm Name', max_length=20)
-  long_name = models.CharField(max_length=200)
+class Firm(models.Model):
+  short_name = models.CharField('Firm Name', max_length=50)
+  long_name = models.CharField(max_length=200, blank=True, null=True)
+  def __str__(self):
+    return self.short_name
 
 
-class Allocation(models.model):
+class Allocation(models.Model):
   order = models.CharField('Order Number', max_length=50)
-  order_text = models.TextField('Order Summary')
-  order_date = models.DateTimeField('Date of allocation')
+  order_text = models.TextField('Order Summary', null=True, blank=True)
+  order_date = models.DateField('Date of allocation')
   ref_work_order = models.ForeignKey('WorkOrder', on_delete=models.CASCADE)
-  ref_allocation = models.ForeignKey('self', on_delete=models.CASCADE)
+  ref_allocation = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
   ref_package = models.ForeignKey('Package', on_delete=models.CASCADE)
 
-class WorkAssigned(models.model):
+  def __str__(self):
+    return self.order # + ': ' + self.order_text
+
+class WorkAssigned(models.Model):
   ref_firm = models.ForeignKey('Firm', on_delete=models.CASCADE)
   ref_allocation = models.ForeignKey('Allocation', on_delete=models.CASCADE)
-# order status: 1 = open, 2 = closed, 3 = canceled
-class DValues(models.model):
-  field_name = models.CharField('Field name', max_length=50)
-  value = models.CharField('Value', max_length=100)
+  completion_status = models.CharField('Completion status', max_length=50, choices=COMPLETION)
+  start_date = models.DateField('Expected start date')
+  finish_date = models.DateField('Expected date of completion', null=True, blank=True)
+  actual_start_date = models.DateField('Actual start date', null=True, blank=True)
+  actual_finish_date = models.DateField('Actual date of completion', null=True, blank=True)
+  def days_left(self):
+    return (self.finish_date - date.today()).days
+
+
+
+class WorkProgress(models.Model):
+  ref_work_assigned = models.ForeignKey('WorkAssigned', on_delete=models.CASCADE)
+  updated_at = models.DateTimeField('Update date', auto_now = True)
+  new_deadline = models.DateField('Promised date of completion')
+  reason_text =  models.TextField('Reason for delay')
+
+
 

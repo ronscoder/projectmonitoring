@@ -1,0 +1,39 @@
+<html>
+<head>
+{% load static %}
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="{% static 'workorders/bootstrap.min.css' %}"/>
+<script type="text/javascript" src="{% static 'workorders/angular.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'workorders/app.js' %}"></script>
+<script type="text/javascript" src="{% static 'workorders/jquery.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'workorders/bootstrap.min.js' %}"></script>
+
+</head>
+
+<body class="container" ng-app='workorders' ng-controller='workorderCtrl'>
+<button class="btn btn-success">This is a sign of little effort</button>
+<h1> Work Orders </h1>
+<div class="container-fluid">
+  <ul class="list-group">
+    <li class="list-group-item" ng-repeat="order in workorders">
+      <a href="#" class="btn btn-success">#{order.order}#</a> <span class="list-group-text panel">#{order.order_text}#</span>
+    </li>
+  </ul>
+</div>
+
+<script>
+  angular.module('workorders',[]).controller('workorderCtrl', function workorderCtrl($scope,$http){
+    //$scope.workorders = [{order:1, order_text:'Test order'}];
+    
+    $http.get('/').then(function(response){
+      $scope.workorders = response.data;
+    });
+  });
+  angular.module('workorders').config(function($interpolateProvider){
+    $interpolateProvider.startSymbol('#{');
+    $interpolateProvider.endSymbol('}#');
+  });
+</script>
+</body>
+</html>
+

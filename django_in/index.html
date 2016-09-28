@@ -24,10 +24,12 @@
 <script>
   angular.module('workorders',[]).controller('workorderCtrl', function workorderCtrl($scope,$http){
     //$scope.workorders = [{order:1, order_text:'Test order'}];
-    
+    $http.post("http://localhost:8000/", {'task':'from angular'}).then(function(response){
+      $scope.workorders = response.data;
+    });/*
     $http.get('http://localhost:8000/').then(function(response){
       $scope.workorders = response.data;
-    });
+    });*/
   });
   angular.module('workorders').config(function($interpolateProvider){
     $interpolateProvider.startSymbol('#{');
